@@ -3,13 +3,7 @@ import time
 
 SendInput = ctypes.windll.user32.SendInput
 
-W = 0x11
-A = 0x1E
-S = 0x1F
-D = 0x20
-M = 0x32
-K = 0x25
-SPACE = 0x39
+KEY_Q = 0x51
 
 # C struct redefinitions
 PUL = ctypes.POINTER(ctypes.c_ulong)
@@ -51,19 +45,15 @@ class Input(ctypes.Structure):
 
 from ctypes import windll, Structure, c_long, byref
 
-
 class POINT(Structure):
     _fields_ = [("x", c_long), ("y", c_long)]
 
 
-def queryMousePosition():
+def query_mouse_position():
     pt = POINT()
     windll.user32.GetCursorPos(byref(pt))
     return pt
     # return { "x": pt.x, "y": pt.y}/
-
-
-
 
 
 def click(x, y):
@@ -75,27 +65,29 @@ def click(x, y):
     ctypes.windll.user32.mouse_event(4, 0, 0, 0, 0)  # left up
 
 
-def moveMouseTo(x, y):
+def move_mouse_to(x, y):
     # convert to ctypes pixels
     # x = int(x * 0.666)
     # y = int(y * 0.666)
-    print(x, y)
     ctypes.windll.user32.SetCursorPos(x, y)
     # ctypes.windll.user32.mouse_event(2, 0, 0, 0, 0)  # left down
     # ctypes.windll.user32.mouse_event(4, 0, 0, 0, 0)  # left up
 
 
-def PressKey(hexKeyCode):
+def press_key(hex_key_code):
     extra = ctypes.c_ulong(0)
     ii_ = Input_I()
-    ii_.ki = KeyBdInput(0, hexKeyCode, 0x0008, 0, ctypes.pointer(extra))
+    ii_.ki = KeyBdInput(0, hex_key_code, 0x0008, 0, ctypes.pointer(extra))
     x = Input(ctypes.c_ulong(1), ii_)
     ctypes.windll.user32.SendInput(1, ctypes.pointer(x), ctypes.sizeof(x))
 
 
-def ReleaseKey(hexKeyCode):
+def release_key(hex_key_code):
     extra = ctypes.c_ulong(0)
     ii_ = Input_I()
-    ii_.ki = KeyBdInput(0, hexKeyCode, 0x0008 | 0x0002, 0, ctypes.pointer(extra))
+    ii_.ki = KeyBdInput(0, hex_key_code, 0x0008 | 0x0002, 0, ctypes.pointer(extra))
     x = Input(ctypes.c_ulong(1), ii_)
     ctypes.windll.user32.SendInput(1, ctypes.pointer(x), ctypes.sizeof(x))
+    
+def query_key_state(hex_key_code):
+    return ctypes.windll.user32.GetKeyState(hex_key_code) > 1
