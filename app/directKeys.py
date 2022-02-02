@@ -3,6 +3,7 @@ import time
 
 SendInput = ctypes.windll.user32.SendInput
 
+KEY_CONTROL = 0x11
 KEY_Q = 0x51
 
 # C struct redefinitions
@@ -91,3 +92,7 @@ def release_key(hex_key_code):
     
 def query_key_state(hex_key_code):
     return ctypes.windll.user32.GetKeyState(hex_key_code) > 1
+
+def move_window(class_name, window_name, x, y, width, height):
+    handle = ctypes.windll.user32.FindWindowW(class_name, window_name)
+    ctypes.windll.user32.MoveWindow(handle, x, y, width, height, True)

@@ -1,7 +1,7 @@
 import numpy as np
 from PIL import ImageGrab
 import cv2
-from directKeys import click, move_mouse_to, query_mouse_position, press_key, release_key, query_key_state, KEY_Q
+from directKeys import click, move_mouse_to, query_mouse_position, press_key, release_key, query_key_state, move_window, KEY_Q, KEY_CONTROL
 import time
 import math
 
@@ -13,7 +13,8 @@ while True:
         break
     
 print("here we go")
-while not query_key_state(KEY_Q):
+move_window(None, u'Untitled - Notepad', 0, 0, 800, 600)
+while not query_key_state(KEY_CONTROL):
     time.sleep(1)
     move_mouse_to(100, 100)
     click(100, 100)
