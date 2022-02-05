@@ -35,12 +35,43 @@ while not query_key_state(KEY_CONTROL):
 
     # click "Battle"
     if check_color(1318, 771, [191, 185, 172]):
+        # switch to towers
+        click(419, 540)
+        time.sleep(1)
+        # click tower to upgrade
+        click(420, 335)
+        time.sleep(1)
+        
+        # click upgrade (spend gems)
+        click(994, 560)
+        time.sleep(1)
+        click(994, 560)
+        time.sleep(1)
+        click(994, 560)
+        time.sleep(1)
+        # click x on upgrade
+        click(1104, 207)
+        time.sleep(1)
+        click(1357, 116)
+        time.sleep(1)
+        
         print("click 'Battle'")
         click(1318, 771)
         time.sleep(1)
+        
+    # click "2x"
+    if check_color(78, 759, [0, 0, 0]):
+        print("click '2x'")
+        click(78, 759)
+        time.sleep(1)
+    
+    # spend gems
+    
+    
+    
     
     # get the color of a pixel
-    # print(get_color(1318, 771))
+    print(get_color(78, 759))
 
     time.sleep(1)
     move_mouse_to(100, 100)
