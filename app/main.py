@@ -140,6 +140,7 @@ def solve_where_is_the_diamond():
         if found_time is not None and time.time() - found_time > 4:
             move_mouse_to(target_x, target_y)
             click(target_x, target_y)
+            time.sleep(2)
             break
             
 
@@ -164,6 +165,18 @@ while not query_key_state(KEY_CONTROL):
 
     # click "Battle"
     if check_color(1318, 771, [191, 185, 172]):
+        # upgrade castle
+        if check_color(1056, 193, [56, 142, 211]):
+            print("upgrading castle")
+            click(1056, 193)
+            time.sleep(1)
+
+        # upgrade archers        
+        if check_color(1056, 303, [54, 136, 203]):
+            print("upgrading archers")
+            click(1056, 303)
+            time.sleep(1)
+            
         # switch to towers
         click(419, 540)
         time.sleep(1)
