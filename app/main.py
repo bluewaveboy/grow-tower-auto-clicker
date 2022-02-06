@@ -5,9 +5,14 @@ from directKeys import click, move_mouse_to, query_mouse_position, press_key, re
 import time
 import math
 
+upgrade_castle = False
+upgrade_archers = False
+upgrade_tower_weapons = False
+
 game_coords = [0, 0, 1460, 840]
+debug_tracking = False
+
 screen = None
-debug_tracking = True
 
 def read_screen():
     global screen
@@ -31,7 +36,7 @@ def check_color_around(x, y, radius, color):
 def solve_where_is_the_diamond():
     global screen
     y_intercept = 524
-    head_win_xs = [347, 445, 540, 637, 735, 830, 928, 1026]
+    head_locations_x = [347, 445, 540, 637, 735, 830, 928, 1026]
     read_screen()
     tracker = cv2.TrackerCSRT_create()
 
@@ -137,9 +142,18 @@ def solve_where_is_the_diamond():
                 cv2.destroyAllWindows()
                 break
         
+        # wait a bit then click the head
         if found_time is not None and time.time() - found_time > 4:
-            move_mouse_to(target_x, target_y)
-            click(target_x, target_y)
+            closest_head_x = target_x
+            closest_head_distance = 99999
+            for x in head_locations_x:
+                distance_to_target = abs(target_x - x)
+                if distance_to_target < closest_head_distance:
+                    closest_head_distance = distance_to_target
+                    closest_head_x = x
+            
+            move_mouse_to(closest_head_x, target_y)
+            click(closest_head_x, target_y)
             time.sleep(2)
             break
             
@@ -166,36 +180,38 @@ while not query_key_state(KEY_CONTROL):
     # click "Battle"
     if check_color(1318, 771, [191, 185, 172]):
         # upgrade castle
-        if check_color(1056, 193, [56, 142, 211]):
+        if upgrade_castle and check_color(1056, 193, [56, 142, 211]):
             print("upgrading castle")
             click(1056, 193)
             time.sleep(1)
 
         # upgrade archers        
-        if check_color(1056, 303, [54, 136, 203]):
+        if upgrade_archers and check_color(1056, 303, [54, 136, 203]):
             print("upgrading archers")
             click(1056, 303)
             time.sleep(1)
             
-        # switch to towers
-        click(419, 540)
-        time.sleep(1)
-        # click tower to upgrade
-        click(420, 335)
-        time.sleep(1)
-        
-        # click upgrade (spend gems)
-        click(994, 560)
-        time.sleep(1)
-        click(994, 560)
-        time.sleep(1)
-        click(994, 560)
-        time.sleep(1)
-        # click x on upgrade
-        click(1104, 207)
-        time.sleep(1)
-        click(1357, 116)
-        time.sleep(1)
+        # upgrade tower weapons
+        if upgrade_tower_weapons:
+            # switch to towers
+            click(419, 540)
+            time.sleep(1)
+            # click tower to upgrade
+            click(420, 335)
+            time.sleep(1)
+            
+            # click upgrade (spend gems)
+            click(994, 560)
+            time.sleep(1)
+            click(994, 560)
+            time.sleep(1)
+            click(994, 560)
+            time.sleep(1)
+            # click x on upgrade
+            click(1104, 207)
+            time.sleep(1)
+            click(1357, 116)
+            time.sleep(1)
         
         print("click 'Battle'")
         click(1318, 771)
