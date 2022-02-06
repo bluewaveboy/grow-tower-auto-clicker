@@ -7,7 +7,7 @@ import math
 
 upgrade_castle = False
 upgrade_archers = False
-upgrade_tower_weapons = False
+upgrade_tower_weapons = True
 
 game_coords = [0, 0, 1460, 840]
 debug_tracking = False
@@ -102,10 +102,10 @@ def solve_where_is_the_diamond():
         read_screen()
         ok, bbox = tracker.update(screen)
         if not ok:
-            print("lost tracking")
-            while True:
-                if cv2.waitKey(1) & 0xFF == ord('q'):
-                    break
+            move_mouse_to(head_locations_x[0], y_intercept)
+            click(head_locations_x[0], y_intercept)
+            time.sleep(2)
+            return
         
         bbox_x = bbox[0]
         bbox_y = bbox[1]
@@ -125,6 +125,11 @@ def solve_where_is_the_diamond():
                 x2 = bbox_x + (bbox_w / 2)
                 y2 = bbox_y + (bbox_h / 2)
                 m = (y2 - y1) / (x2 - x1)
+                if m == 0:
+                    move_mouse_to(head_locations_x[0], y_intercept)
+                    click(head_locations_x[0], y_intercept)
+                    time.sleep(2)
+                    return
                 b = y1 - (m * x1)
                 x = (y_intercept - b) / m
                 target_x = x
