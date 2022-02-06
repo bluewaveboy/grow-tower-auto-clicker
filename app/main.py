@@ -197,9 +197,9 @@ while not query_key_state(KEY_CONTROL):
             
             # switch to towers
             click(419, 540)
-            time.sleep(1)
+            time.sleep(3)
             # click tower to upgrade
-            click(420, 335)
+            click(420, 220)
             time.sleep(1)
             
             # click upgrade (spend gems)
