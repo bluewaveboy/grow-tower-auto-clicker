@@ -8,7 +8,7 @@ authors = ["Joe Ferner <joe@fernsroth.com>"]
 python = "^3.8"
 numpy = "^1.22.1"
 Pillow = "^9.0.0"
-opencv-python = "^4.5.5"
+opencv-contrib-python = "^4.5.5"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
