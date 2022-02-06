@@ -7,9 +7,29 @@ import math
 
 upgrade_castle = False
 upgrade_archers = False
+upgrade_heros = False
 upgrade_tower_weapons = True
 
 game_coords = [0, 0, 1460, 840]
+hero_locations = [
+    [332, 139],
+    [416, 139],
+    [504, 139],
+    [332, 241],
+    [416, 241],
+    [504, 241],
+    [332, 347],
+    [416, 347],
+    [504, 347],
+    [332, 441],
+    [416, 441],
+    [504, 441]
+]
+tower_weapon_locations = [
+    [422, 229],
+    [422, 332],
+    [422, 442]
+]
 debug_tracking = False
 
 screen = None
@@ -184,39 +204,66 @@ while not query_key_state(KEY_CONTROL):
 
     # click "Battle"
     if check_color(1318, 771, [191, 185, 172]):
-        # upgrade castle
+        # upgrade castle (if button is active)
         if upgrade_castle and check_color(1056, 193, [56, 142, 211]):
             print("upgrading castle")
             click(1056, 193)
             time.sleep(1)
 
-        # upgrade archers        
+        # upgrade archer (if button is active)
         if upgrade_archers and check_color(1056, 303, [54, 136, 203]):
             print("upgrading archers")
             click(1056, 303)
             time.sleep(1)
             
+        # upgrade heros
+        if upgrade_heros:
+            for pos in hero_locations:
+                print("upgrading hero", pos)
+                # click tower
+                click(pos[0], pos[1])
+                time.sleep(0.2)
+                # click upgrade
+                click(994, 560)
+                time.sleep(0.2)
+                click(994, 560)
+                time.sleep(0.2)
+                click(994, 560)
+                time.sleep(0.2)
+                # click x on upgrade
+                click(1104, 207)
+                time.sleep(0.2)
+                # click x on heros
+                click(1357, 116)
+                time.sleep(0.2)
+                
+            
         # upgrade tower weapons
         if upgrade_tower_weapons:
+            print("upgrading tower weapon")
+            
             # switch to towers
             click(419, 540)
             time.sleep(3)
-            # click tower to upgrade
-            click(420, 220)
-            time.sleep(1)
             
-            # click upgrade (spend gems)
-            click(994, 560)
-            time.sleep(1)
-            click(994, 560)
-            time.sleep(1)
-            click(994, 560)
-            time.sleep(1)
-            # click x on upgrade
-            click(1104, 207)
-            time.sleep(1)
-            click(1357, 116)
-            time.sleep(1)
+            for pos in tower_weapon_locations:
+                # click tower to upgrade
+                click(pos[0], pos[1])
+                time.sleep(0.2)
+
+                # click upgrade (spend gems)
+                click(994, 560)
+                time.sleep(0.2)
+                click(994, 560)
+                time.sleep(0.2)
+                click(994, 560)
+                time.sleep(0.2)
+                # click x on upgrade
+                click(1104, 207)
+                time.sleep(0.2)
+                # click x on towers
+                click(1357, 116)
+                time.sleep(0.2)
         
         print("click 'Battle'")
         click(1318, 771)
