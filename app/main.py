@@ -5,8 +5,8 @@ from directKeys import click, move_mouse_to, query_mouse_position, press_key, re
 import time
 import math
 
-upgrade_castle = False
-upgrade_archers = False
+upgrade_castle = True
+upgrade_archers = True
 upgrade_tower_weapons = False
 
 game_coords = [0, 0, 1460, 840]
@@ -193,6 +193,8 @@ while not query_key_state(KEY_CONTROL):
             
         # upgrade tower weapons
         if upgrade_tower_weapons:
+            print("upgrading tower weapon")
+            
             # switch to towers
             click(419, 540)
             time.sleep(1)
