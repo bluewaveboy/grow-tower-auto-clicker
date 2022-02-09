@@ -5,10 +5,11 @@ from directKeys import click, move_mouse_to, query_mouse_position, press_key, re
 import time
 import math
 
-upgrade_castle = False
-upgrade_archers = False
-upgrade_heros = False
+upgrade_castle = True
+upgrade_archers = True
+upgrade_heros = True
 upgrade_tower_weapons = True
+upgrade_leader = True
 
 game_coords = [0, 0, 1460, 840]
 hero_locations = [
@@ -144,6 +145,8 @@ def solve_where_is_the_diamond():
                 y1 = head_y + (head_height / 2)
                 x2 = bbox_x + (bbox_w / 2)
                 y2 = bbox_y + (bbox_h / 2)
+                if x2 - x1 == 0:
+                    continue
                 m = (y2 - y1) / (x2 - x1)
                 if m == 0:
                     move_mouse_to(head_locations_x[0], y_intercept)
@@ -204,6 +207,26 @@ while not query_key_state(KEY_CONTROL):
 
     # click "Battle"
     if check_color(1318, 771, [191, 185, 172]):
+        # upgrade leader
+        if upgrade_leader:
+            print("upgrading leader")
+            # click leader
+            click(611, 550)
+            time.sleep(1)
+            # click upgrade
+            click(994, 560)
+            time.sleep(0.2)
+            click(994, 560)
+            time.sleep(0.2)
+            click(994, 560)
+            time.sleep(0.2)
+            # click x on upgrade
+            click(1104, 207)
+            time.sleep(0.2)
+            # click x on heros
+            click(1357, 116)
+            time.sleep(0.2)
+            
         # upgrade castle (if button is active)
         if upgrade_castle and check_color(1056, 193, [56, 142, 211]):
             print("upgrading castle")
