@@ -12,6 +12,7 @@ upgrade_tower_weapons = True
 upgrade_leader = True
 
 game_coords = [0, 0, 1460, 840]
+# game_coords = [3, 74, 1470, 911]
 hero_locations = [
     [332, 139],
     [416, 139],
@@ -42,7 +43,7 @@ def read_screen():
     return screen
 
 def get_color(x, y):
-    return screen[game_coords[1] + y, game_coords[0] + x]
+    return screen[y, x]
 
 def check_color(x, y, color):
     return np.array_equal(get_color(x, y), color)
@@ -66,43 +67,51 @@ def solve_where_is_the_diamond():
 
     # top
     if check_color_around(678, 342, 35, [67, 196, 255]):
-        head_x = game_coords[0] + 651
-        head_y = game_coords[0] + 384
+        print("diamond is on the top")
+        head_x = 651
+        head_y = 384
 
     # top/right
     elif check_color_around(837, 389, 35, [67, 196, 255]):
-        head_x = game_coords[0] + 747
-        head_y = game_coords[0] + 418
+        print("diamond is on the top/right")
+        head_x = 747
+        head_y = 418
 
     # right
     elif check_color_around(862, 541, 35, [67, 196, 255]):
-        head_x = game_coords[0] + 782
-        head_y = game_coords[0] + 517
+        print("diamond is on the right")
+        head_x = 782
+        head_y = 517
 
     # bottom/right
     elif check_color_around(837, 680, 35, [67, 196, 255]):
-        head_x = game_coords[0] + 747
-        head_y = game_coords[0] + 613
+        print("diamond is on the bottom/right")
+        head_x = 747
+        head_y = 613
 
     # bottom
     elif check_color_around(678, 730, 35, [67, 196, 255]):
-        head_x = game_coords[0] + 651
-        head_y = game_coords[0] + 648
+        print("diamond is on the bottom")
+        head_x = 651
+        head_y = 648
 
     # bottom/left
     elif check_color_around(528, 680, 35, [67, 196, 255]):
-        head_x = game_coords[0] + 550
-        head_y = game_coords[0] + 613
+        print("diamond is on the bottom/left")
+        head_x = 550
+        head_y = 613
 
     # left
     elif check_color_around(491, 541, 35, [67, 196, 255]):
-        head_x = game_coords[0] + 526
-        head_y = game_coords[0] + 517
+        print("diamond is on the left")
+        head_x = 526
+        head_y = 517
 
     # top/left
     elif check_color_around(528, 389, 35, [67, 196, 255]):
-        head_x = game_coords[0] + 550
-        head_y = game_coords[0] + 418
+        print("diamond is on the top/left")
+        head_x = 550
+        head_y = 418
 
     else:
         print(get_color(678, 342))
@@ -171,15 +180,19 @@ def solve_where_is_the_diamond():
                 break
         
         # wait a bit then click the head
+        print(f"head is moving to {target_x}")
         if found_time is not None and time.time() - found_time > 4:
+            closest_head_i = 0
             closest_head_x = target_x
             closest_head_distance = 99999
-            for x in head_locations_x:
+            for i, x in enumerate(head_locations_x):
                 distance_to_target = abs(target_x - x)
                 if distance_to_target < closest_head_distance:
                     closest_head_distance = distance_to_target
+                    closest_head_i = i
                     closest_head_x = x
             
+            print(f"target location is {closest_head_i} (x:{closest_head_x})")
             move_mouse_to(closest_head_x, target_y)
             click(closest_head_x, target_y)
             time.sleep(2)
@@ -302,9 +315,10 @@ while not query_key_state(KEY_CONTROL):
     if check_color(354, 713, [167, 118, 59]) and check_color(415, 121, [167, 167, 167]) and check_color(934, 222, [223, 223, 223]):
         # don't click start if we have a timer "time left"
         if not check_color(416, 618, [219, 219, 219]):
+            print("solving where the diamond is")
             click(348, 751)
             solve_where_is_the_diamond()
-    
+            
     # get the color of a pixel
     # print(get_color(934, 222))
 
