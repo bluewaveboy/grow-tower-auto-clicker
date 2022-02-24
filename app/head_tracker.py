@@ -1,7 +1,11 @@
+from turtle import position
 import numpy as np
 from PIL import ImageGrab, Image
+import cv2
 
-game_coords = [0, 0, 1460, 840]
+game_coords = [0, 0, 945, 604]
+y_intercept = 408
+stop_distance = 30
 
 def get_color(screen, coords):
     return screen[coords[1], coords[0]]
@@ -28,15 +32,18 @@ def spiral(width, height):
         
 class HeadTracker:
     def init(self, screen, initial_coords):
+        self.pts = []
         self.initial_coords = initial_coords
         self.color = get_color(screen, initial_coords)
-        self.current_center = self.initial_center = self._find_center(screen, initial_coords)
-        print(self.initial_center)
+        center = self._find_center(screen, initial_coords)
+        self.pts.append(center)
     
     def update(self, screen):
-        new_coords = self._find_new_coords(screen, self.current_center)
-        self.current_center = self._find_center(screen, new_coords)
-        print(self.current_center)
+        current_center = self.pts[-1]
+        new_coords = self._find_new_coords(screen, current_center)
+        new_center = self._find_center(screen, new_coords)
+        if current_center[0] != new_center[0] and current_center[1] != new_center[1]:
+            self.pts.append(new_center)
 
     def _find_new_coords(self, screen, starting_pt):
         for pt in spiral(40, 40):
@@ -85,13 +92,71 @@ class HeadTracker:
 
         return bbox
 
+    def get_line(self):
+        pt1 = self.pts[0]
+        pt2 = self.pts[-1]
+        x1 = pt1[0]
+        y1 = pt1[1]
+        x2 = pt2[0]
+        y2 = pt2[1]
+        if y2 - y1 != 0:
+            m = (x2 - x1) / (y2 - y1)
+            x = (m * (y_intercept - y1)) + x1
+            pt2 = [int(x), y_intercept]
+        return (pt1, pt2)
+
+    def get_distance(self):
+        pt1 = self.pts[0]
+        pt2 = self.pts[-1]
+        dx = pt2[0] - pt1[0]
+        dy = pt2[1] - pt1[1]
+        return (dx ** 2 + dy ** 2) ** 0.5
+
 def read_screen():
     return np.array(ImageGrab.grab(bbox=game_coords))
 
 screen = read_screen()
-tracker = HeadTracker()
-tracker.init(screen, [400, 348])
+trackers = []
+positions = [
+    [400, 348],
+    [461, 334],
+    [519, 361],
+    [532, 425],
+    [506, 481],
+    [441, 495],
+    [384, 467],
+    [371, 404]
+]
+colors = [
+    (255, 0, 0),
+    (0, 255, 0),
+    (0, 0, 255),
+    (255, 255, 0),
+    (255, 0, 255),
+    (0, 255, 255),
+    (0, 0, 0),
+    (255, 255, 255)
+]
+for pos in positions:
+    tracker = HeadTracker()
+    tracker.init(screen, pos)
+    trackers.append(tracker)
 
+stop = False
+cv2.imshow("Tracking", screen)
 while True:
     screen = read_screen()
-    tracker.update(screen)
+    for tracker, color in zip(trackers, colors):
+        if not stop:
+            tracker.update(screen)
+        for pt in tracker.pts:
+            cv2.circle(screen, pt, 2, color, 3)
+        (line_pt1, line_pt2) = tracker.get_line()
+        cv2.line(screen, line_pt1, line_pt2, color, 1)
+    for tracker in trackers:
+        if tracker.get_distance() > stop_distance:
+            stop = True
+    cv2.imshow("Tracking", screen)
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        cv2.destroyAllWindows()
+        break
