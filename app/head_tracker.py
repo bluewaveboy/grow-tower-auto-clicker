@@ -1,6 +1,5 @@
-from turtle import position
 import numpy as np
-from PIL import ImageGrab, Image
+from PIL import ImageGrab
 import cv2
 
 game_coords = [0, 0, 945, 604]
@@ -42,7 +41,8 @@ class HeadTracker:
         current_center = self.pts[-1]
         new_coords = self._find_new_coords(screen, current_center)
         new_center = self._find_center(screen, new_coords)
-        if current_center[0] != new_center[0] and current_center[1] != new_center[1]:
+        # TODO stop if new center if too far from calculated line
+        if abs(current_center[0] - new_center[0]) > 2 and abs(current_center[1] - new_center[1]) > 2:
             self.pts.append(new_center)
 
     def _find_new_coords(self, screen, starting_pt):
@@ -61,6 +61,7 @@ class HeadTracker:
         return [int(bbox[0] + (dx / 2)), int(bbox[1] + (dy / 2))]
 
     def _find_bounds(self, screen, coords):
+        # TODO fill space and find weighted center
         bbox = [coords[0], coords[1], coords[0], coords[1]]
         for x in range(coords[0], 0, -1):
             c = get_color(screen, [x, coords[1]])
@@ -100,9 +101,18 @@ class HeadTracker:
         x2 = pt2[0]
         y2 = pt2[1]
         if y2 - y1 != 0:
-            m = (x2 - x1) / (y2 - y1)
-            x = (m * (y_intercept - y1)) + x1
-            pt2 = [int(x), y_intercept]
+            x_pts = [pt[0] for pt in self.pts]
+            y_pts = [pt[1] for pt in self.pts]
+
+            x_pts = np.array(x_pts)
+            y_pts = np.array(y_pts)
+            model = np.polyfit(x_pts, y_pts, 1)
+            m = model[0]
+            b = model[1]
+
+            x = int((y_intercept - b) / m)
+            pt2 = [x, y_intercept]
+
         return (pt1, pt2)
 
     def get_distance(self):
