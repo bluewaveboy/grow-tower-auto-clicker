@@ -1,22 +1,10 @@
-import numpy as np
-from PIL import ImageGrab
 import cv2
+import numpy as np
 
-game_coords = [0, 0, 945, 604]
+from color_utils import color_eq, get_color
+
 y_intercept = 408
-stop_distance = 30
-
-def get_color(screen, coords):
-    return screen[coords[1], coords[0]]
-
-def color_eq(c1, c2):
-    diff = 0
-    for i in range(0, 3):
-        p1 = int(c1[i])
-        p2 = int(c2[i])
-        diff = diff + abs(p1 - p2)
-    return diff < 50
-
+color_tolerance = 50
 
 def spiral(width, height):
     x = y = 0
@@ -42,15 +30,15 @@ class HeadTracker:
         new_coords = self._find_new_coords(screen, current_center)
         new_center = self._find_center(screen, new_coords)
         # TODO stop if new center if too far from calculated line
-        if abs(current_center[0] - new_center[0]) > 2 and abs(current_center[1] - new_center[1]) > 2:
+        if abs(current_center[0] - new_center[0]) > 2 or abs(current_center[1] - new_center[1]) > 2:
             self.pts.append(new_center)
 
     def _find_new_coords(self, screen, starting_pt):
-        for pt in spiral(40, 40):
+        for pt in spiral(80, 80):
             x = starting_pt[0] + pt[0]
             y = starting_pt[1] + pt[1]
             pt_color = get_color(screen, [x, y])
-            if color_eq(pt_color, self.color):
+            if color_eq(pt_color, self.color, color_tolerance):
                 return [x, y]
         return starting_pt
 
@@ -65,28 +53,28 @@ class HeadTracker:
         bbox = [coords[0], coords[1], coords[0], coords[1]]
         for x in range(coords[0], 0, -1):
             c = get_color(screen, [x, coords[1]])
-            if color_eq(c, self.color):
+            if color_eq(c, self.color, color_tolerance):
                 bbox[0] = x
             else:
                 break
 
         for x in range(coords[0], screen.shape[0], 1):
             c = get_color(screen, [x, coords[1]])
-            if color_eq(c, self.color):
+            if color_eq(c, self.color, color_tolerance):
                 bbox[2] = x
             else:
                 break
 
         for y in range(coords[1], 0, -1):
             c = get_color(screen, [coords[0], y])
-            if color_eq(c, self.color):
+            if color_eq(c, self.color, color_tolerance):
                 bbox[1] = y
             else:
                 break
 
         for y in range(coords[1], screen.shape[1], 1):
             c = get_color(screen, [coords[0], y])
-            if color_eq(c, self.color):
+            if color_eq(c, self.color, color_tolerance):
                 bbox[3] = y
             else:
                 break
@@ -96,22 +84,23 @@ class HeadTracker:
     def get_line(self):
         pt1 = self.pts[0]
         pt2 = self.pts[-1]
-        x1 = pt1[0]
-        y1 = pt1[1]
-        x2 = pt2[0]
-        y2 = pt2[1]
-        if y2 - y1 != 0:
-            x_pts = [pt[0] for pt in self.pts]
-            y_pts = [pt[1] for pt in self.pts]
+        if pt1[0] == pt2[0] and pt1[1] == pt2[1]:
+            return None
+        
+        x_pts = [pt[0] for pt in self.pts]
+        y_pts = [pt[1] for pt in self.pts]
 
-            x_pts = np.array(x_pts)
-            y_pts = np.array(y_pts)
-            model = np.polyfit(x_pts, y_pts, 1)
-            m = model[0]
-            b = model[1]
+        x_pts = np.array(x_pts)
+        if abs(np.min(x_pts) - np.max(x_pts)) < 20:
+            pt2[1] = y_intercept            
+            return (pt1, pt2)
+        y_pts = np.array(y_pts)
+        model = np.polyfit(x_pts, y_pts, 1)
+        m = model[0]
+        b = model[1]
 
-            x = int((y_intercept - b) / m)
-            pt2 = [x, y_intercept]
+        x = int((y_intercept - b) / m)
+        pt2 = [x, y_intercept]
 
         return (pt1, pt2)
 
@@ -122,51 +111,10 @@ class HeadTracker:
         dy = pt2[1] - pt1[1]
         return (dx ** 2 + dy ** 2) ** 0.5
 
-def read_screen():
-    return np.array(ImageGrab.grab(bbox=game_coords))
-
-screen = read_screen()
-trackers = []
-positions = [
-    [400, 348],
-    [461, 334],
-    [519, 361],
-    [532, 425],
-    [506, 481],
-    [441, 495],
-    [384, 467],
-    [371, 404]
-]
-colors = [
-    (255, 0, 0),
-    (0, 255, 0),
-    (0, 0, 255),
-    (255, 255, 0),
-    (255, 0, 255),
-    (0, 255, 255),
-    (0, 0, 0),
-    (255, 255, 255)
-]
-for pos in positions:
-    tracker = HeadTracker()
-    tracker.init(screen, pos)
-    trackers.append(tracker)
-
-stop = False
-cv2.imshow("Tracking", screen)
-while True:
-    screen = read_screen()
-    for tracker, color in zip(trackers, colors):
-        if not stop:
-            tracker.update(screen)
-        for pt in tracker.pts:
+    def debug(self, screen, color):
+        for pt in self.pts:
             cv2.circle(screen, pt, 2, color, 3)
-        (line_pt1, line_pt2) = tracker.get_line()
-        cv2.line(screen, line_pt1, line_pt2, color, 1)
-    for tracker in trackers:
-        if tracker.get_distance() > stop_distance:
-            stop = True
-    cv2.imshow("Tracking", screen)
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        cv2.destroyAllWindows()
-        break
+        line = self.get_line()
+        if line is not None:
+            (line_pt1, line_pt2) = line
+            cv2.line(screen, line_pt1, line_pt2, color, 1)

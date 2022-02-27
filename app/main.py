@@ -1,8 +1,8 @@
-from head_tracker import HeadTracker
+from utils.head_tracker import HeadTracker
 import numpy as np
 from PIL import ImageGrab, Image
 import cv2
-from directKeys import click, move_mouse_to, query_mouse_position, press_key, release_key, query_key_state, move_window, KEY_Q, KEY_CONTROL
+from utils.direct_keys import click, move_mouse_to, query_mouse_position, press_key, release_key, query_key_state, move_window, KEY_Q, KEY_CONTROL
 import time
 import math
 
