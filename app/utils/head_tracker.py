@@ -66,8 +66,8 @@ class HeadTracker:
                     count = count + 1
         if count == 0:
             return None
-        x_avg = int(x_sum / count) + coords[0]
-        y_avg = int(y_sum / count) + coords[1]
+        x_avg = int(x_sum / count) + (coords[0] - find_center_size_div_2)
+        y_avg = int(y_sum / count) + (coords[1] - find_center_size_div_2)
         return [x_avg, y_avg]
 
     def _fill(self, screen, fill, screen_coords, coords):
