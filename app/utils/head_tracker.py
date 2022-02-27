@@ -1,10 +1,12 @@
 import cv2
 import numpy as np
+from PIL import ImageGrab
 
 from color_utils import color_eq, get_color
 
 y_intercept = 408
 color_tolerance = 50
+find_center_size = 20
 
 def spiral(width, height):
     x = y = 0
@@ -29,6 +31,8 @@ class HeadTracker:
         current_center = self.pts[-1]
         new_coords = self._find_new_coords(screen, current_center)
         new_center = self._find_center(screen, new_coords)
+        if new_center is None:
+            return
         # TODO stop if new center if too far from calculated line
         if abs(current_center[0] - new_center[0]) > 2 or abs(current_center[1] - new_center[1]) > 2:
             self.pts.append(new_center)
@@ -43,43 +47,46 @@ class HeadTracker:
         return starting_pt
 
     def _find_center(self, screen, coords):
-        bbox = self._find_bounds(screen, coords)
-        dx = bbox[2] - bbox[0]
-        dy = bbox[3] - bbox[1]
-        return [int(bbox[0] + (dx / 2)), int(bbox[1] + (dy / 2))]
+        fill = np.zeros((find_center_size, find_center_size))
+        find_center_size_div_2 = int(find_center_size / 2)
+        self._fill(
+            screen,
+            fill,
+            [coords[0] - find_center_size_div_2, coords[1] - find_center_size_div_2],
+            [find_center_size_div_2, find_center_size_div_2]
+        )
+        x_sum = 0
+        y_sum = 0
+        count = 0
+        for y in range(0, find_center_size):
+            for x in range(0, find_center_size):
+                if fill[x, y] == 1:
+                    x_sum = x_sum + x
+                    y_sum = y_sum + y
+                    count = count + 1
+        if count == 0:
+            return None
+        x_avg = int(x_sum / count) + coords[0]
+        y_avg = int(y_sum / count) + coords[1]
+        return [x_avg, y_avg]
 
-    def _find_bounds(self, screen, coords):
-        # TODO fill space and find weighted center
-        bbox = [coords[0], coords[1], coords[0], coords[1]]
-        for x in range(coords[0], 0, -1):
-            c = get_color(screen, [x, coords[1]])
-            if color_eq(c, self.color, color_tolerance):
-                bbox[0] = x
-            else:
-                break
+    def _fill(self, screen, fill, screen_coords, coords):
+        if fill[coords[0], coords[1]] != 0:
+            return
 
-        for x in range(coords[0], screen.shape[0], 1):
-            c = get_color(screen, [x, coords[1]])
-            if color_eq(c, self.color, color_tolerance):
-                bbox[2] = x
-            else:
-                break
-
-        for y in range(coords[1], 0, -1):
-            c = get_color(screen, [coords[0], y])
-            if color_eq(c, self.color, color_tolerance):
-                bbox[1] = y
-            else:
-                break
-
-        for y in range(coords[1], screen.shape[1], 1):
-            c = get_color(screen, [coords[0], y])
-            if color_eq(c, self.color, color_tolerance):
-                bbox[3] = y
-            else:
-                break
-
-        return bbox
+        c = get_color(screen, [screen_coords[0] + coords[0], screen_coords[1] + coords[1]])
+        if color_eq(c, self.color, color_tolerance):
+            fill[coords[0], coords[1]] = 1
+            if coords[0] + 1 < find_center_size:
+                self._fill(screen, fill, screen_coords, [coords[0] + 1, coords[1]])    
+            if coords[0] - 1 >= 0:
+                self._fill(screen, fill, screen_coords, [coords[0] - 1, coords[1]])    
+            if coords[1] + 1 < find_center_size:
+                self._fill(screen, fill, screen_coords, [coords[0], coords[1] + 1])    
+            if coords[1] - 1 >= 0:
+                self._fill(screen, fill, screen_coords, [coords[0], coords[1] - 1])    
+        else:
+            fill[coords[0], coords[1]] = -1
 
     def get_line(self):
         pt1 = self.pts[0]
@@ -118,3 +125,15 @@ class HeadTracker:
         if line is not None:
             (line_pt1, line_pt2) = line
             cv2.line(screen, line_pt1, line_pt2, color, 1)
+
+# game_coords = [0, 0, 945, 604]
+
+# def read_screen():
+#     return np.array(ImageGrab.grab(bbox=game_coords))
+
+# coords = [400, 348]
+# screen = read_screen()
+# t = HeadTracker()
+# t.init(screen, coords)
+# center = t._find_center(screen, coords)
+# print(center)
