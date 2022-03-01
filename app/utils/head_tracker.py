@@ -2,9 +2,9 @@ import cv2
 import numpy as np
 from PIL import ImageGrab
 
-from color_utils import color_eq, get_color
+from utils.color_utils import color_eq, get_color
 
-y_intercept = 408
+y_intercept = 526
 color_tolerance = 50
 find_center_size = 20
 

@@ -6,24 +6,22 @@ import numpy as np
 from PIL import ImageGrab, Image
 import cv2
 
-from head_tracker import HeadTracker
+from utils.head_tracker import HeadTracker
 
 stop_distance = 30
 
 head_positions = [
-    [400, 348],
-    [461, 334],
-    [519, 361],
-    [532, 425],
-    [506, 481],
-    [441, 495],
-    [384, 467],
-    [371, 404]
+    [689, 417],
+    [777, 463],
+    [795, 555],
+    [758, 642],
+    [658, 661],
+    [575, 621],
+    [555, 525],
+    [597, 441]
 ]
 
-end_head_x_positions = [
-    240, 305, 370, 435, 498, 562, 628, 692
-]
+end_head_x_positions = [347, 445, 540, 637, 735, 830, 928, 1026]
 
 colors = [
     (255, 0, 0),
@@ -99,60 +97,32 @@ class HeadTrackers:
         for head_tracker, color in zip(self.head_trackers, colors):
             head_tracker.debug(screen, color)
 
-game_coords = [0, 0, 945, 604]
+# game_coords = [0, 0, 945, 604]
 
-
-# time.sleep(1)
-# print("3")
-# time.sleep(1)
-# print("2")
-# time.sleep(1)
-# print("1")
-# time.sleep(1)
-# print("go")
-# start_time = time.time()
+# p = Path("screenshots") / "2022-02-27_16_53_51.590434"
+# paths = [str(p) for p in p.iterdir() if str(p).endswith('.png')]
+# paths.sort()
 # screens = []
-# while time.time() - start_time < 8:
-#     frame_start_time = time.time()
-#     screen = ImageGrab.grab(bbox=game_coords)
-#     screens.append(screen)
-#     while time.time() - frame_start_time < (1 / 30):
-#         time.sleep(0.001)
-# print("complete")
+# print(f"reading {len(paths)} screens")
+# for f in paths:
+#     img = Image.open(f)
+#     screens.append(np.array(img))
 
-# Path("screenshots").mkdir(exist_ok=True)
-# path = Path("screenshots") / str(datetime.datetime.now()).replace(':', '_').replace(' ', '_')
-# path.mkdir()
-# print(f"saving {len(screens)} screen")
-# for i, screen in enumerate(screens):
-#     screen.save(path / f'screen-{str(i).zfill(5)}.png')
-# print("done")
+# print("calculating")
+# head_trackers = HeadTrackers()
+# head_trackers.init(screens[0])
+# for screen in screens:
+#     head_trackers.update(screen)
+# head_trackers.complete()
+# print("final_head_positions", head_trackers.final_head_positions)
+
+# cv2.imshow("Tracking", screen)
+# while True:
+#     screen = np.array(ImageGrab.grab(bbox=game_coords))
+#     head_trackers.debug(screen)
+#     cv2.imshow("Tracking", screen)
+#     if cv2.waitKey(1) & 0xFF == ord('q'):
+#         cv2.destroyAllWindows()
+#         break
 # quit()
-
-p = Path("screenshots") / "2022-02-27_16_53_51.590434"
-paths = [str(p) for p in p.iterdir() if str(p).endswith('.png')]
-paths.sort()
-screens = []
-print(f"reading {len(paths)} screens")
-for f in paths:
-    img = Image.open(f)
-    screens.append(np.array(img))
-
-print("calculating")
-head_trackers = HeadTrackers()
-head_trackers.init(screens[0])
-for screen in screens:
-    head_trackers.update(screen)
-head_trackers.complete()
-print("final_head_positions", head_trackers.final_head_positions)
-
-cv2.imshow("Tracking", screen)
-while True:
-    screen = np.array(ImageGrab.grab(bbox=game_coords))
-    head_trackers.debug(screen)
-    cv2.imshow("Tracking", screen)
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        cv2.destroyAllWindows()
-        break
-quit()
 
