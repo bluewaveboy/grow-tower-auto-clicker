@@ -1,9 +1,11 @@
+import datetime
+from pathlib import Path
+from utils.head_trackers import HeadTrackers, end_head_x_positions
+from utils.head_tracker import y_intercept
 import numpy as np
-from PIL import ImageGrab, Image
-import cv2
-from directKeys import click, move_mouse_to, query_mouse_position, press_key, release_key, query_key_state, move_window, KEY_Q, KEY_CONTROL
+from PIL import ImageGrab
+from utils.direct_keys import click, move_mouse_to, query_mouse_position, press_key, release_key, query_key_state, move_window, KEY_Q, KEY_CONTROL
 import time
-import math
 
 upgrade_castle = True
 upgrade_archers = True
@@ -134,6 +136,19 @@ def solve_where_is_the_diamond():
     else:
         print("could not determine diamond location")
         quit()
+        
+    # click start
+    click(348, 751)
+
+    # capture all the frames    
+    capture_start_time = time.time()
+    screens = []
+    while time.time() - capture_start_time < 5:
+        frame_start_time = time.time()
+        screen = ImageGrab.grab(bbox=game_coords)
+        screens.append(screen)
+        while time.time() - frame_start_time < (1 / 30):
+            time.sleep(0.001)
 
     # initialize the object tracker to track the head
     read_screen()
