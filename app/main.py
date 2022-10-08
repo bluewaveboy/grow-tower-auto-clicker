@@ -11,8 +11,8 @@ upgrade_heros = True
 upgrade_tower_weapons = True
 upgrade_leader = True
 
-game_coords = [0, 0, 1460, 840]
-# game_coords = [3, 74, 1470, 911]
+# game_coords = [0, 0, 1460, 840]
+game_coords = [3, 74, 1470, 911]
 hero_locations = [
     [332, 139],
     [416, 139],
@@ -32,7 +32,7 @@ tower_weapon_locations = [
     [422, 332],
     [422, 442]
 ]
-debug_tracking = False
+debug_tracking = True
 
 screen = None
 
@@ -57,10 +57,28 @@ def check_color_around(x, y, radius, color):
 
 def solve_where_is_the_diamond():
     global screen
-    y_intercept = 524
-    head_locations_x = [347, 445, 540, 637, 735, 830, 928, 1026]
-    read_screen()
-    tracker = cv2.TrackerCSRT_create()
+    head_y_click_location = 524
+    head_x_click_locations = [347, 445, 540, 637, 735, 830, 928, 1026]
+    head_locations = [
+        [651, 384],
+        [747, 418],
+        [782, 517],
+        [747, 613],
+        [651, 648],
+        [550, 613],
+        [526, 517],
+        [550, 418]
+    ]
+    colors = [
+        (0, 255, 0),
+        (0, 0, 255),
+        (255, 0, 0),
+        (255, 255, 0),
+        (255, 0, 255),
+        (0, 255, 255),
+        (255, 255, 255),
+        (0, 0, 0)
+    ]
 
     head_width = 36
     head_height = 44
@@ -68,135 +86,136 @@ def solve_where_is_the_diamond():
     # top
     if check_color_around(678, 342, 35, [67, 196, 255]):
         print("diamond is on the top")
-        head_x = 651
-        head_y = 384
+        head_x = head_locations[0][0]
+        head_y = head_locations[0][1]
 
     # top/right
     elif check_color_around(837, 389, 35, [67, 196, 255]):
         print("diamond is on the top/right")
-        head_x = 747
-        head_y = 418
+        head_x = head_locations[1][0]
+        head_y = head_locations[1][1]
 
     # right
     elif check_color_around(862, 541, 35, [67, 196, 255]):
         print("diamond is on the right")
-        head_x = 782
-        head_y = 517
+        head_x = head_locations[2][0]
+        head_y = head_locations[2][1]
 
     # bottom/right
     elif check_color_around(837, 680, 35, [67, 196, 255]):
         print("diamond is on the bottom/right")
-        head_x = 747
-        head_y = 613
+        head_x = head_locations[3][0]
+        head_y = head_locations[3][1]
 
     # bottom
     elif check_color_around(678, 730, 35, [67, 196, 255]):
         print("diamond is on the bottom")
-        head_x = 651
-        head_y = 648
+        head_x = head_locations[4][0]
+        head_y = head_locations[4][1]
 
     # bottom/left
     elif check_color_around(528, 680, 35, [67, 196, 255]):
         print("diamond is on the bottom/left")
-        head_x = 550
-        head_y = 613
+        head_x = head_locations[5][0]
+        head_y = head_locations[5][1]
 
     # left
     elif check_color_around(491, 541, 35, [67, 196, 255]):
         print("diamond is on the left")
-        head_x = 526
-        head_y = 517
+        head_x = head_locations[6][0]
+        head_y = head_locations[6][1]
 
     # top/left
     elif check_color_around(528, 389, 35, [67, 196, 255]):
         print("diamond is on the top/left")
-        head_x = 550
-        head_y = 418
+        head_x = head_locations[7][0]
+        head_y = head_locations[7][1]
 
     else:
-        print(get_color(678, 342))
         print("could not determine diamond location")
         quit()
 
     # initialize the object tracker to track the head
-    tracker.init(screen, (head_x, head_y, head_width, head_height))
-    
+    read_screen()
+    head_trackers = []
+    head_bboxs = []
+    target_x = []
+    last_bboxs = []
+    for head_location in head_locations:
+        head_tracker = cv2.TrackerCSRT_create()
+        head_tracker.init(screen, (head_location[0], head_location[1], head_width, head_height))
+        head_trackers.append(head_tracker)
+        head_bboxs.append([])
+        last_bboxs.append(None)
+        target_x.append(None)
+        
     # track the head
     if debug_tracking:
         cv2.imshow("Tracking", screen)
-    target_x = None
-    target_y = None
-    last_bbox = None
-    found_time = None
     while True:
         read_screen()
-        ok, bbox = tracker.update(screen)
-        if not ok:
-            move_mouse_to(head_locations_x[0], y_intercept)
-            click(head_locations_x[0], y_intercept)
-            time.sleep(2)
-            return
-        
-        bbox_x = bbox[0]
-        bbox_y = bbox[1]
-        bbox_w = bbox[2]
-        bbox_h = bbox[3]
-        
-        # draw bounding box
-        if debug_tracking:
-            cv2.rectangle(screen, (int(bbox_x), int(bbox_y)), (int(bbox_x + bbox_w), int(bbox_y + bbox_h)), (0, 255, 0), 2, 1)
-        if target_x is None:
-            has_moved_x = abs(bbox_x - head_x) > 10
-            has_moved_y = abs(bbox_y - head_y) > 10
-            if has_moved_x or has_moved_y:
+        for i, head_tracker in enumerate(head_trackers):
+            ok, bbox = head_tracker.update(screen)
+            if ok:
+                head_bboxs[i] = bbox
+                bbox_x = bbox[0]
+                bbox_y = bbox[1]
+                bbox_w = bbox[2]
+                bbox_h = bbox[3]
+
                 # use the center of the tracking box
-                x1 = head_x + (head_width / 2)
-                y1 = head_y + (head_height / 2)
+                x1 = head_locations[i][0] + (head_width / 2)
+                y1 = head_locations[i][1] + (head_height / 2)
                 x2 = bbox_x + (bbox_w / 2)
                 y2 = bbox_y + (bbox_h / 2)
-                if x2 - x1 == 0:
-                    continue
-                m = (y2 - y1) / (x2 - x1)
-                if m == 0:
-                    move_mouse_to(head_locations_x[0], y_intercept)
-                    click(head_locations_x[0], y_intercept)
-                    time.sleep(2)
-                    return
-                b = y1 - (m * x1)
-                x = (y_intercept - b) / m
-                target_x = x
-                target_y = y_intercept
-                last_bbox = bbox
-                found_time = time.time()
+                if x2 - x1 != 0:
+                    m = (y2 - y1) / (x2 - x1)
+                    if m != 0:
+                        b = y1 - (m * x1)
+                        x = (head_y_click_location - b) / m
+                        target_x[i] = x
+                        last_bboxs[i] = bbox
+
+                # draw bounding box
+                if debug_tracking:
+                    cv2.rectangle(screen, (int(bbox_x), int(bbox_y)), (int(bbox_x + bbox_w), int(bbox_y + bbox_h)), colors[i], 2, 1)
+                    if target_x[i] is not None:
+                        cv2.line(screen, (int(head_locations[i][0] + (head_width / 2)), int(head_locations[i][1] + (head_height / 2))), (int(target_x[i]), int(head_y_click_location)), colors[i])
+            
+                # if target_x[i] is None:
+                #     has_moved_x = abs(bbox_x - head_x) > 10
+                #     has_moved_y = abs(bbox_y - head_y) > 10
+                #     if has_moved_x or has_moved_y:
 
         if debug_tracking:
-            if target_x is not None:
-                cv2.rectangle(screen, (int(head_x), int(head_y)), (int(head_x + head_width), int(head_y + head_height)), (0, 255, 0), 2, 1)
-                cv2.rectangle(screen, (int(last_bbox[0]), int(last_bbox[1])), (int(last_bbox[0] + last_bbox[2]), int(last_bbox[1] + last_bbox[3])), (0, 255, 0), 2, 1)
-                cv2.line(screen, (int(head_x + (head_width / 2)), int(head_y + (head_height / 2))), (int(target_x), int(target_y)), (0, 255, 0))
+            # if target_x is not None:
+            #     cv2.rectangle(screen, (int(head_x), int(head_y)), (int(head_x + head_width), int(head_y + head_height)), (0, 255, 0), 2, 1)
+            #     cv2.rectangle(screen, (int(last_bbox[0]), int(last_bbox[1])), (int(last_bbox[0] + last_bbox[2]), int(last_bbox[1] + last_bbox[3])), (0, 255, 0), 2, 1)
+            #     
             cv2.imshow("Tracking", screen)    
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 cv2.destroyAllWindows()
                 break
         
         # wait a bit then click the head
-        print(f"head is moving to {target_x}")
-        if found_time is not None and time.time() - found_time > 4:
-            closest_head_i = 0
-            closest_head_x = target_x
-            closest_head_distance = 99999
-            for i, x in enumerate(head_locations_x):
-                distance_to_target = abs(target_x - x)
-                if distance_to_target < closest_head_distance:
-                    closest_head_distance = distance_to_target
-                    closest_head_i = i
-                    closest_head_x = x
+        # print(f"head is moving to {target_x}")
+        # if found_time is not None and time.time() - found_time > 4:
+        #     closest_head_i = 0
+        #     closest_head_x = target_x
+        #     closest_head_distance = 99999
+        #     for i, x in enumerate(head_x_click_locations):
+        #         distance_to_target = abs(target_x - x)
+        #         print(f"trying head {i} as x {x}, distance {distance_to_target} (target_x: {target_x})")
+        #         if distance_to_target < closest_head_distance:
+        #             closest_head_distance = distance_to_target
+        #             closest_head_i = i
+        #             closest_head_x = x
             
-            print(f"target location is {closest_head_i} (x:{closest_head_x})")
-            move_mouse_to(closest_head_x, target_y)
-            click(closest_head_x, target_y)
-            time.sleep(2)
-            break
+        #     print(f"target location is {closest_head_i} (x:{closest_head_x})")
+        #     move_mouse_to(closest_head_x, target_y)
+        #     click(closest_head_x, target_y)
+        #     time.sleep(2)
+        #     break
             
 
 # only start the program after the mouse is in the top left corner
@@ -312,12 +331,12 @@ while not query_key_state(KEY_CONTROL):
         time.sleep(1)
     
     # where is the diamond?
-    if check_color(354, 713, [167, 118, 59]) and check_color(415, 121, [167, 167, 167]) and check_color(934, 222, [223, 223, 223]):
+    # TODO if check_color(354, 713, [167, 118, 59]) and check_color(415, 121, [167, 167, 167]) and check_color(934, 222, [223, 223, 223]):
         # don't click start if we have a timer "time left"
-        if not check_color(416, 618, [219, 219, 219]):
-            print("solving where the diamond is")
-            click(348, 751)
-            solve_where_is_the_diamond()
+        # TODO if not check_color(416, 618, [219, 219, 219]):
+    print("solving where the diamond is")
+    click(348, 751)
+    solve_where_is_the_diamond()
             
     # get the color of a pixel
     # print(get_color(934, 222))
